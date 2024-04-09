@@ -1,0 +1,9 @@
+{{define "upload.tmpl"}}
+<script src="https://unpkg.com/htmx.org@1.9.9"></script>
+    <h1>Upload Image</h1>
+    <form hx-post="/attachment" enctype="multipart/form-data">
+        <input type="file" name="file">
+        <button type="submit">Upload</button>
+    </form>
+    <div id="upload-status"></div>
+{{end}}
