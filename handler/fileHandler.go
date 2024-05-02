@@ -2,17 +2,50 @@ package handler
 
 import (
 	"crypto/rand"
+	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"path/filepath"
 
 	"github.com/TeamWAF/woorizip-attachment/models"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
+// 액세스 키 ID와 시크릿 액세스 키 설정
+const (
+	accessKeyID     = "AKIAZNCZNQ3APZXPT3CN"
+	secretAccessKey = "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"
+	region          = "ap-northeast-2"
+	bucketName      = "woorizip-attachment"
+)
+
+// AWS S3 클라이언트 생성
+var svc *s3.S3
+
+func init() {
+	// 세션 생성
+	sess, err := session.NewSession(&aws.Config{
+		Region:      aws.String(region),
+		Credentials: credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
+	})
+	if err != nil {
+		log.Fatalf("failed to create AWS session: %v", err)
+	}
+
+	// S3 클라이언트 생성
+	svc = s3.New(sess)
+}
+
+// GenerateRandomString 주어진 길이의 랜덤한 문자열을 생성합니다.
 func GenerateRandomString(length int) string {
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_"
 	bytes := make([]byte, length)
@@ -25,82 +58,130 @@ func GenerateRandomString(length int) string {
 	return string(bytes)
 }
 
-// UploadFile 파일을 업로드합니다.
+// UploadFileToS3 파일을 S3에 업로드하고 업로드한 파일의 키(경로)를 반환합니다.
+func UploadFileToS3(file *multipart.FileHeader) (string, error) {
+	// 파일 오픈
+	fileContent, err := file.Open()
+	if err != nil {
+		return "", fmt.Errorf("failed to open uploaded file: %v", err)
+	}
+	defer fileContent.Close()
+
+	// 파일 이름 생성
+	fileExtension := filepath.Ext(file.Filename)
+	fileName := GenerateRandomString(30) + fileExtension
+
+	// S3에 파일 업로드
+	_, err = svc.PutObject(&s3.PutObjectInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String("attachments/" + fileName),
+		Body:   fileContent,
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to upload file to S3: %v", err)
+	}
+
+	return fileName, nil
+}
+
+// UploadFile 함수는 파일을 업로드합니다.
 func UploadFile(c *gin.Context) {
-
-	dbInterface, exists := c.Get("db")
-	// 데이터베이스 연결을 컨텍스트에서 가져오기
-	if !exists {
-		log.Println("Database connection not found in context")
-		return
-	}
-
-	// 데이터베이스 연결 형변환 확인
-	db, ok := dbInterface.(*gorm.DB)
-	if !ok {
-		log.Println("Database connection found in context is not of type *gorm.DB")
-		return
-	}
-
-	// 파일 가져오기
 	file, err := c.FormFile("file")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// 파일 이름 생성
-	fileExtension := filepath.Ext(file.Filename)
-	fileName := GenerateRandomString(30) + fileExtension
-	filePath := filepath.Join("attachments", fileName)
-
-	// 파일 저장
-	if err := c.SaveUploadedFile(file, filePath); err != nil {
+	fileName, err := UploadFileToS3(file)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	attachment := models.Attchment{
+	// DB에 파일 정보 저장
+	dbInterface, exists := c.Get("db")
+	if !exists {
+		log.Println("Database connection not found in context")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database connection not found"})
+		return
+	}
+
+	db, ok := dbInterface.(*gorm.DB)
+	if !ok {
+		log.Println("Database connection found in context is not of type *gorm.DB")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database connection error"})
+		return
+	}
+
+	attachment := models.Attachment{
+		ID:        uuid.New().String(),
 		OwnerID:   uuid.New().String(),
-		Path:      filePath,
-		Extension: fileExtension,
+		Path:      fileName, // S3에 업로드된 파일의 키
+		Extension: filepath.Ext(fileName),
 	}
 
 	if err := db.Create(&attachment).Error; err != nil {
 		log.Printf("Error saving attachment info to database: %v", err)
-		c.String(http.StatusInternalServerError, "Failed to save attachment info. Server error.")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save attachment info. Server error."})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "File uploaded successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "File uploaded successfully", "url": "https://test.teamwaf.app/attachment/" + attachment.ID})
 }
 
-// downloadFile 파일을 다운로드합니다.
-func DownloadFile(c *gin.Context) {
-	// id를 받아 db에서 파일 path를 찾아 해당 파일을 다운로드
-	id := c.Param("id")
-
+// DownloadFileFromS3 S3로부터 파일을 다운로드합니다.
+func DownloadFileFromS3(c *gin.Context, id string) error {
 	dbInterface, exists := c.Get("db")
-	// 데이터베이스 연결을 컨텍스트에서 가져오기
 	if !exists {
-		log.Println("Database connection not found in context")
-		return
+		return fmt.Errorf("database connection not found in context")
 	}
 
-	// 데이터베이스 연결 형변환 확인
 	db, ok := dbInterface.(*gorm.DB)
 	if !ok {
-		log.Println("Database connection found in context is not of type *gorm.DB")
-		return
+		return fmt.Errorf("database connection found in context is not of type *gorm.DB")
 	}
 
-	var attachment models.Attchment
+	var attachment models.Attachment
 	if err := db.Where("id = ?", id).First(&attachment).Error; err != nil {
-		log.Printf("Error finding attachment in database: %v", err)
-		c.String(http.StatusNotFound, "Attachment not found")
-		return
+		return fmt.Errorf("error finding attachment in database: %v", err)
 	}
 
-	c.File(attachment.Path)
+	// S3에서 파일 다운로드
+	resp, err := svc.GetObject(&s3.GetObjectInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String("attachments/" + attachment.Path),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to download file from S3: %v", err)
+	}
+	defer resp.Body.Close()
 
+	// 파일의 내용을 읽어 바이트 슬라이스로 변환
+	fileBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read file content: %v", err)
+	}
+
+	// 파일 확장자를 기반으로 MIME 타입 결정
+	contentType := http.DetectContentType(fileBytes)
+
+	// Content-Disposition 헤더를 설정하여 파일 이름 지정
+	c.Header("Content-Disposition", "inline; filename="+filepath.Base(attachment.Path))
+	// Content-Type 헤더를 설정하여 MIME 타입 지정
+	c.Header("Content-Type", contentType)
+	// HTTP 상태 코드를 설정하여 응답 시작
+	c.Writer.WriteHeader(http.StatusOK)
+	// 파일 내용을 클라이언트에 바이트 슬라이스로 보냄
+	c.Writer.Write(fileBytes)
+
+	return nil
+}
+
+// DownloadFile 함수는 파일을 다운로드합니다.
+func DownloadFile(c *gin.Context) {
+	id := c.Param("id")
+	if err := DownloadFileFromS3(c, id); err != nil {
+		log.Printf("Error downloading file: %v", err)
+		c.String(http.StatusNotFound, "Attachment not found")
+	}
 }

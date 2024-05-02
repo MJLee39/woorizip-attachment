@@ -16,11 +16,11 @@ func main() {
 	}
 
 	// db 테이블 삭제후 재생성
-	db.Migrator().DropTable(&models.Attchment{})
-	db.AutoMigrate(&models.Attchment{})
+	// db.Migrator().DropTable(&models.Attachment{})
+	db.AutoMigrate(&models.Attachment{})
 
 	// 라우터 초기화
 	r := router.InitRouter()
-	r.Run(":9999")
+	r.Run(":19999")
 
 }

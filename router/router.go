@@ -7,6 +7,7 @@ import (
 	"github.com/TeamWAF/woorizip-attachment/handler"
 	"github.com/TeamWAF/woorizip-attachment/middleware"
 	"github.com/TeamWAF/woorizip-attachment/utils"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,10 +22,17 @@ func InitRouter() *gin.Engine {
 	// gin 엔진 생성
 	r := gin.Default()
 
+	// CORS 미들웨어 설정
+	config := cors.DefaultConfig()
+	config.AllowAllOrigins = true
+	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
+	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
+	r.Use(cors.New(config))
+
 	r.Use(middleware.DatabaseMiddleware(db))
 
 	// 루트 경로에 대한 핸들러 설정
-	r.GET("/", func(c *gin.Context) {
+	r.GET("/attachment", func(c *gin.Context) {
 		// 업로드 템플릿을 직접 반환
 		c.HTML(http.StatusOK, "upload.tmpl", gin.H{})
 	})

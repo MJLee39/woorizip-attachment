@@ -5,7 +5,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type Attchment struct {
+type Attachment struct {
 	gorm.Model
 	ID        string `gorm:"primaryKey" json:"id"`
 	OwnerID   string `gorm:"not null" json:"owner_id"`
@@ -13,7 +13,7 @@ type Attchment struct {
 	Extension string `gorm:"not null" json:"Extension"`
 }
 
-func (a *Attchment) BeforeCreate(*gorm.DB) (err error) {
+func (a *Attachment) BeforeCreate(*gorm.DB) (err error) {
 	if a.ID == "" {
 		a.ID = uuid.New().String()
 	}
