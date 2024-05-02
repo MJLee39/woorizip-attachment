@@ -27,9 +27,5 @@
 
 
 FROM scratch
-
-WORKDIR /app
-
-COPY ./main .
-
-ENTRYPOINT ["./main"]
+COPY main /
+ENTRYPOINT ["/main"]
