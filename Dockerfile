@@ -28,4 +28,6 @@
 
 FROM scratch
 COPY main /
+RUN chmod +x /main
+RUN ls -l
 CMD ["/main"]
