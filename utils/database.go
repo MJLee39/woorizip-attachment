@@ -23,7 +23,7 @@ var (
 
 func init() {
 
-	dsn = "teamwaf:dntmdrhkaudtjd12@tcp(testaws.teamwaf.app:3306)/teamwafdb?charset=utf8mb4&serverTimezone=Asia/Seoul&parseTime=True&loc=Local"
+	dsn = "teamwaf:dntmdrhkaudtjd12@tcp(testaws.teamwaf.app:3306)/teamwafdb?charset=utf8mb4&parseTime=True&loc=Local"
 }
 
 // InitDatabase Database 구조체를 초기화합니다.
