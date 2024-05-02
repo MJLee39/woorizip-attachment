@@ -13,7 +13,7 @@ COPY go.mod main.go ./
 RUN apk add --no-cache git openssh
 
 # SSH 키를 복사하여 Docker 이미지 내에 추가
-COPY ~/.ssh/id_rsa /root/.ssh/id_rsa
+COPY /var/lib/jenkins/.ssh/id_rsa /root/.ssh/id_rsa
 
 # SSH 호스트 키를 인증된 호스트 목록에 추가
 RUN ssh-keyscan -t rsa github.com >> /root/.ssh/known_hosts
