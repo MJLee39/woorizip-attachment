@@ -32,4 +32,4 @@ WORKDIR /app
 
 COPY ./main .
 
-ENTRYPOINT ["/app/main"]
+ENTRYPOINT ["./main"]
