@@ -2,7 +2,6 @@ package handler
 
 import (
 	"crypto/rand"
-	"crypto/tls"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -33,6 +32,7 @@ const (
 var svc *s3.S3
 
 func init() {
+	// 세션 생성
 	sess, err := session.NewSession(&aws.Config{
 		Region:      aws.String(region),
 		Credentials: credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
@@ -41,15 +41,8 @@ func init() {
 		log.Fatalf("failed to create AWS session: %v", err)
 	}
 
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-	client := &http.Client{Transport: tr}
-
-	// S3 클라이언트 생성 시 사용자 정의 http.Client를 사용합니다.
-	svc := s3.New(sess, &aws.Config{
-		HTTPClient: client,
-	})
+	// S3 클라이언트 생성
+	svc = s3.New(sess)
 
 	// debug
 	log.Println("S3 client created")
