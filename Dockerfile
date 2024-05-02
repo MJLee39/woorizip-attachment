@@ -5,27 +5,18 @@ ENV GO111MODULE=on \
     GOOS=linux \
     GOARCH=arm64
 
+# 필요한 경우 git 설치
+RUN apk add --no-cache git
+
+# GitHub 액세스 토큰을 환경 변수로 설정
+ENV GITHUB_TOKEN=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
+
 WORKDIR /build
 
-COPY go.mod main.go .gitconfig ./
+COPY go.mod main.go ./
 
-# 필요한 경우 git 및 openssh 설치
-RUN apk add --no-cache git openssh
-
-# SSH 키를 복사하여 Docker 이미지 내에 추가
-COPY ./id_rsa /root/.ssh/id_rsa
-
-# SSH 호스트 키를 인증된 호스트 목록에 추가
-RUN ssh-keyscan -t rsa github.com >> /root/.ssh/known_hosts
-
-RUN git config --global user.name "jenkins"
-
-RUN git config --global user.email "jenkins@teamwaf.app"
-
-RUN chmod 600 /root/.ssh/id_rsa
-
+# GitHub 액세스 토큰을 사용하여 모듈 다운로드
 RUN go env -w GOPRIVATE=github.com/TeamWAF
-
 RUN go mod tidy
 
 RUN go build -o main .
