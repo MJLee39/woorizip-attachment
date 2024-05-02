@@ -1,24 +1,33 @@
-FROM golang:1.22.2-alpine3.19 AS builder
+# FROM golang:1.22.2-alpine3.19 AS builder
 
-ENV GO111MODULE=on \
-    CGO_ENABLED=0 \
-    GOOS=linux \
-    GOARCH=arm64
+# ENV GO111MODULE=on \
+#     CGO_ENABLED=0 \
+#     GOOS=linux \
+#     GOARCH=arm64
 
-WORKDIR /build
+# WORKDIR /build
 
-COPY go.mod main.go ./
+# COPY go.mod main.go ./
 
-RUN go mod tidy
+# RUN go env -w GOPRIVATE=github.com/TeamWAF
 
-RUN go build -o main .
+# RUN go mod tidy
 
-WORKDIR /dist
+# RUN go build -o main .
 
-RUN cp /build/main .
+# WORKDIR /dist
+
+# RUN cp /build/main .
+
+# FROM scratch
+
+# COPY --from=builder /dist/main .
+
+# ENTRYPOINT ["/main"]
+
 
 FROM scratch
 
-COPY --from=builder /dist/main .
+COPY main /app/main
 
-ENTRYPOINT ["/main"]
+ENTRYPOINT ["/app/main"]
