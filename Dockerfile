@@ -26,8 +26,8 @@
 # ENTRYPOINT ["/main"]
 
 
-FROM scratch
-COPY ./main /main
-WORKDIR /
+FROM alpine:latest
+WORKDIR /app
+COPY main .
 RUN ls -l
-CMD ["./main"]
+ENTRYPOINT ["./main"]
