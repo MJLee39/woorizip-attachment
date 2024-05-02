@@ -25,6 +25,9 @@ func main() {
 	// template 파일 로드
 	r.LoadHTMLGlob("tmpl/*.html")
 
-	r.Run(":9999")
+	err = r.RunTLS(":443", "cert.pem", "key.pem")
+	if err != nil {
+		fmt.Println("Failed to start server with TLS:", err)
+	}
 
 }

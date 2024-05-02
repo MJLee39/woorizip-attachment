@@ -16,7 +16,7 @@ spec:
       - name: attachmentapp
         image: 211125685751.dkr.ecr.ap-northeast-2.amazonaws.com/woorizip-attachment:20240502085524
         ports:
-        - containerPort: 9999
+        - containerPort: 443
 ---
 apiVersion: v1
 kind: Service
@@ -28,7 +28,7 @@ spec:
   ports:
     - protocol: TCP
       port: 443
-      targetPort: 9999
+      targetPort: 443
   type: NodePort
 ---
 apiVersion: networking.k8s.io/v1
@@ -44,7 +44,6 @@ metadata:
     alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-northeast-2:211125685751:certificate/c7979fef-a310-4ce3-9ead-80528f822f61
     external-dns.alpha.kubernetes.io/hostname: woorizip.teamwaf.app
 
-    # ... (기존 주석 유지)
 spec:
   ingressClassName: alb
   rules:
