@@ -28,6 +28,8 @@
 
 FROM scratch
 
-COPY main /app/main
+WORKDIR /app
+
+COPY ./main .
 
 ENTRYPOINT ["/app/main"]
