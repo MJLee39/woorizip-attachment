@@ -21,6 +21,10 @@ func main() {
 
 	// 라우터 초기화
 	r := router.InitRouter()
+
+	// template 파일 로드
+	r.LoadHTMLGlob("tmpl/*.html")
+
 	r.Run(":9999")
 
 }
