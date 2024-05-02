@@ -22,8 +22,8 @@ import (
 
 // 액세스 키 ID와 시크릿 액세스 키 설정
 const (
-	accessKeyID     = "AKIAZNCZNQ3APZXPT3CN"
-	secretAccessKey = "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"
+	accessKeyID     = "AKIATCKASJX3SCFPR2BB"
+	secretAccessKey = "y4yoLkOeBMseNVxRPsnQsdvb0pq4ZO7uFRDv"
 	region          = "ap-northeast-2"
 	bucketName      = "woorizip-attachment"
 )
