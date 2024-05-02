@@ -21,6 +21,6 @@ func main() {
 
 	// 라우터 초기화
 	r := router.InitRouter()
-	r.Run(":19999")
+	r.Run(":9999")
 
 }
