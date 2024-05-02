@@ -44,7 +44,6 @@ metadata:
     alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-northeast-2:211125685751:certificate/c7979fef-a310-4ce3-9ead-80528f822f61
     external-dns.alpha.kubernetes.io/hostname: woorizip.teamwaf.app
 
-
 spec:
   ingressClassName: alb
   rules:
