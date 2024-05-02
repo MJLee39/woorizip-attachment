@@ -30,4 +30,5 @@ FROM alpine:latest
 WORKDIR /app
 COPY main .
 RUN ls -l
+RUN chmod +x main
 ENTRYPOINT ["./main"]
