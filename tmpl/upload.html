@@ -28,7 +28,7 @@
             event.preventDefault();
             const formData = new FormData(this);
             try {
-                const response = await fetch('http://localhost:9999/attachment', {
+                const response = await fetch('http://woorizip.teamwaf.app/attachment', {
                     method: 'POST',
                     body: formData
                 });
