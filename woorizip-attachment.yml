@@ -24,7 +24,7 @@ metadata:
   name: service-attachment
 spec:
   selector:
-    app: helloworld
+    app: attachment
   ports:
   - protocol: TCP
     port: 80
@@ -34,7 +34,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: ingress-helloworld
+  name: ingress-attachment
   annotations:
     alb.ingress.kubernetes.io/group.name: teamwaf
     alb.ingress.kubernetes.io/scheme: internet-facing
