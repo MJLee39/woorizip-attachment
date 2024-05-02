@@ -15,6 +15,7 @@ WORKDIR /build
 
 COPY go.mod main.go ./
 
+RUN git config --global url."https://${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
 # GitHub 액세스 토큰을 사용하여 모듈 다운로드
 RUN go env -w GOPRIVATE=github.com/TeamWAF
 RUN go mod tidy
