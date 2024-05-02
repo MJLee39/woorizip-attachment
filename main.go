@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/TeamWAF/woorizip-attachment/models"
 	"github.com/TeamWAF/woorizip-attachment/router"
@@ -25,9 +26,14 @@ func main() {
 	// template 파일 로드
 	r.LoadHTMLGlob("tmpl/*.html")
 
-	err = r.RunTLS(":443", "cert.pem", "key.pem")
+	// 인증서 파일 경로 설정
+	certFile := "certificate.pem"
+	certChainFile := "certificate_chain.pem"
+
+	// HTTPS 서버 설정
+	err = r.RunTLS(":443", certFile, certChainFile)
 	if err != nil {
-		fmt.Println("Failed to start server with TLS:", err)
+		log.Fatal("Error starting HTTPS server:", err)
 	}
 
 }
