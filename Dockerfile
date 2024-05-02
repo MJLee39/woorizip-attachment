@@ -19,7 +19,10 @@ COPY ./id_rsa /root/.ssh/id_rsa
 # SSH 호스트 키를 인증된 호스트 목록에 추가
 RUN ssh-keyscan -t rsa github.com >> /root/.ssh/known_hosts
 
-# SSH 키 권한 설정
+RUN git config --global user.name "jenkins"
+
+RUN git config --global user.email "jenkins@teamwaf.app"
+
 RUN chmod 600 /root/.ssh/id_rsa
 
 RUN go env -w GOPRIVATE=github.com/TeamWAF
