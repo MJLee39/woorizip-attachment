@@ -22,8 +22,8 @@ import (
 
 // 액세스 키 ID와 시크릿 액세스 키 설정
 const (
-	accessKeyID     = "AKIATCKASJX3SCFPR2BB"
-	secretAccessKey = "y4yoLkOeBMseNVxRPsnQsdvb0pq4ZO7uFRDv"
+	accessKeyID     = "AKIATCKASJX3T3QQLSBO"
+	secretAccessKey = "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"
 	region          = "ap-northeast-2"
 	bucketName      = "woorizip-attachment"
 )
@@ -43,6 +43,10 @@ func init() {
 
 	// S3 클라이언트 생성
 	svc = s3.New(sess)
+
+	// debug
+	log.Println("S3 client created")
+	log.Println(svc.Endpoint)
 }
 
 // GenerateRandomString 주어진 길이의 랜덤한 문자열을 생성합니다.

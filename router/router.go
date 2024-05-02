@@ -19,7 +19,7 @@ func InitRouter() *gin.Engine {
 		fmt.Println(err)
 	}
 
-	// gin 엔진 생성
+	// gin 엔진 생성 모든 로그 출력, 디버그 모드
 	r := gin.Default()
 
 	// CORS 미들웨어 설정
