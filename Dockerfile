@@ -7,11 +7,10 @@ ENV GO111MODULE=on \
 
 WORKDIR /build
 
-COPY go.mod main.go ./
+COPY go.mod main.go .gitconfig ./
 
 # 필요한 경우 git 및 openssh 설치
 RUN apk add --no-cache git openssh
-
 
 # SSH 키를 복사하여 Docker 이미지 내에 추가
 COPY ./id_rsa /root/.ssh/id_rsa
