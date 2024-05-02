@@ -26,9 +26,9 @@ spec:
   selector:
     app: attachment
   ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 9999
+    - protocol: TCP
+      port: 443
+      targetPort: 9999
   type: NodePort
 ---
 apiVersion: networking.k8s.io/v1
@@ -44,15 +44,16 @@ metadata:
     alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-northeast-2:211125685751:certificate/c7979fef-a310-4ce3-9ead-80528f822f61
     external-dns.alpha.kubernetes.io/hostname: woorizip.teamwaf.app
 
+    # ... (기존 주석 유지)
 spec:
   ingressClassName: alb
   rules:
     - http:
         paths:
-        - path: /attachment
-          pathType: Prefix
-          backend:
-            service:
-              name: service-attachment
-              port:
-                number: 80
+          - path: /attachment
+            pathType: Prefix
+            backend:
+              service:
+                name: service-attachment
+                port:
+                  number: 443
