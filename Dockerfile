@@ -27,7 +27,7 @@
 
 
 FROM scratch
-COPY main /
-RUN chmod +x /main
+COPY ./main /main
+WORKDIR /
 RUN ls -l
-CMD ["/main"]
+CMD ["./main"]
