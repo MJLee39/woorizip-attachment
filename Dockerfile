@@ -1,46 +1,38 @@
-# FROM golang:1.22.2-alpine3.19 AS builder
+FROM golang:1.22.2-alpine3.19 AS builder
 
-# ENV GO111MODULE=on \
-#     CGO_ENABLED=0 \
-#     GOOS=linux \
-#     GOARCH=arm64
+ENV GO111MODULE=on \
+    CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=arm64
 
-# WORKDIR /build
+WORKDIR /build
 
-# COPY go.mod main.go ./
+COPY go.mod main.go ./
 
-# RUN go env -w GOPRIVATE=github.com/TeamWAF
+# 필요한 경우 git 및 openssh 설치
+RUN apk add --no-cache git openssh
 
-# RUN go mod tidy
+# SSH 키를 복사하여 Docker 이미지 내에 추가
+COPY ~/.ssh/id_rsa /root/.ssh/id_rsa
 
-# RUN go build -o main .
+# SSH 호스트 키를 인증된 호스트 목록에 추가
+RUN ssh-keyscan -t rsa github.com >> /root/.ssh/known_hosts
 
-# WORKDIR /dist
+# SSH 키 권한 설정
+RUN chmod 600 /root/.ssh/id_rsa
 
-# RUN cp /build/main .
+RUN go env -w GOPRIVATE=github.com/TeamWAF
 
-# FROM scratch
+RUN go mod tidy
 
-# COPY --from=builder /dist/main .
+RUN go build -o main .
 
-# ENTRYPOINT ["/main"]
+WORKDIR /dist
 
+RUN cp /build/main .
 
-FROM alpine:latest
+FROM scratch
 
-WORKDIR /app
+COPY --from=builder /dist/main .
 
-# 로컬에서 빌드한 실행 파일을 현재 작업 디렉토리로 복사
-COPY main .
-
-# 실행 파일이 존재하는지 확인
-RUN if [ ! -f "./main" ]; then echo "Error: main file not found"; exit 1; fi
-
-# 실행 파일에 실행 가능한 권한 부여
-RUN chmod +x main
-
-# 실행 파일의 권한 확인
-RUN ls -l main
-
-# ENTRYPOINT로 실행 파일을 설정
-ENTRYPOINT ["./main"]
+ENTRYPOINT ["/main"]
