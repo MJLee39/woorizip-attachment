@@ -51,7 +51,7 @@ spec:
     spec:
       containers:
       - name: caddy
-        image: caddy:latest
+        image: 211125685751.dkr.ecr.ap-northeast-2.amazonaws.com/woorizip-attachment:20240507115504
         ports:
         - containerPort: 80
         - containerPort: 443
@@ -103,6 +103,6 @@ spec:
     spec:
       containers:
       - name: attachmentapp
-        image: 211125685751.dkr.ecr.ap-northeast-2.amazonaws.com/woorizip-attachment:20240507113644
+        image: 211125685751.dkr.ecr.ap-northeast-2.amazonaws.com/woorizip-attachment:20240507115504
         ports:
         - containerPort: 9999
