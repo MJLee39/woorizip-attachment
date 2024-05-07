@@ -30,8 +30,6 @@ FROM ubuntu:24.04
 WORKDIR /app
 COPY main .
 COPY tmpl ./tmpl
-COPY certificate_chain.pem .
-COPY certificate.pem .
 RUN chmod +x main
 RUN ls -l
 ENTRYPOINT ["./main"]
