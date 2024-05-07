@@ -27,13 +27,10 @@ func main() {
 	r.LoadHTMLGlob("tmpl/*.html")
 
 	// 인증서 파일 경로 설정
-	certFile := "certificate.pem"
-	certChainFile := "certificate_chain.pem"
 
-	// HTTPS 서버 설정
-	err = r.RunTLS(":443", certFile, certChainFile)
-	if err != nil {
-		log.Fatal("Error starting HTTPS server:", err)
+	// 서버 시작
+	if err := r.Run(":9999"); err != nil {
+		log.Fatalf("failed to start server: %v", err)
 	}
 
 }
