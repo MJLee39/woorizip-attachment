@@ -1,3 +1,95 @@
+<<<<<<< HEAD
+=======
+---
+# Caddy ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: caddy-config
+data:
+  Caddyfile: |
+    # 글로벌 옵션
+    :80 {
+        # HTTP -> HTTPS 리디렉션 (301 Moved Permanently)
+        redir https://{$hostname}:443{$request_uri} permanent
+    }
+
+    :443 {
+        # Let's Encrypt를 사용하여 SSL 인증서 자동화
+        tls {
+            domains file.teamwaf.app
+            # Let's Encrypt 스테이징 서버 사용 (테스트용)
+            ca https://acme-staging-v02.api.letsencrypt.org/directory
+        }
+
+        # 리버스 프록시 설정
+        reverse_proxy /* {
+            # 내부 첨부파일 서버의 IP 주소 및 포트
+            to deployment/deployment-attachmen:9999
+
+            # 필요한 경우 추가 옵션 설정
+            # 예: 헤더 변경, 버퍼링 등
+        }
+
+        # 필요한 경우 추가 설정
+        # 예: 로깅, 보안 등
+    }
+
+---
+# Caddy Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: caddy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: caddy
+  template:
+    metadata:
+      labels:
+        app: caddy
+    spec:
+      containers:
+      - name: caddy
+        image: 211125685751.dkr.ecr.ap-northeast-2.amazonaws.com/woorizip-attachment:20240507115504
+        ports:
+        - containerPort: 80
+        - containerPort: 443
+        volumeMounts:
+        - name: config
+          mountPath: /etc/caddy/Caddyfile
+          subPath: Caddyfile
+      volumes:
+      - name: config
+        configMap:
+          name: caddy-config
+
+---
+# Caddy Service (LoadBalancer type for NLB)
+apiVersion: v1
+kind: Service
+metadata:
+  name: caddy-nlb
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+    external-dns.alpha.kubernetes.io/hostname: file.teamwaf.app
+spec:
+  type: LoadBalancer
+  selector:
+    app: caddy
+  ports:
+   - port: 80
+     targetPort: 80
+   - port: 443
+     targetPort: 443
+
+
+---
+
+
+>>>>>>> 5e5fcd3ba8f13fc3a673723ad43b61e685722183
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -14,6 +106,6 @@ spec:
     spec:
       containers:
       - name: attachmentapp
-        image: 211125685751.dkr.ecr.ap-northeast-2.amazonaws.com/woorizip-attachment:20240507113644
+        image: 211125685751.dkr.ecr.ap-northeast-2.amazonaws.com/woorizip-attachment:20240507115504
         ports:
         - containerPort: 9999
