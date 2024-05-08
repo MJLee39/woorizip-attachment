@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: attachmentapp
-        image: 211125685751.dkr.ecr.ap-northeast-2.amazonaws.com/woorizip-attachment:20240508014947
+        image: 211125685751.dkr.ecr.ap-northeast-2.amazonaws.com/woorizip-attachment:20240508015351
         ports:
         - containerPort: 9999
 
