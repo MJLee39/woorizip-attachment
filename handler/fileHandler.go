@@ -38,7 +38,7 @@ func init() {
 		Credentials: credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
 	})
 	if err != nil {
-		log.Fatalf("failed to create AWS session: %v", err)
+		log.Fatalf("Failed to create AWS session: %v", err)
 	}
 
 	// S3 클라이언트 생성
@@ -54,7 +54,7 @@ func GenerateRandomString(length int) string {
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_"
 	bytes := make([]byte, length)
 	if _, err := io.ReadFull(rand.Reader, bytes); err != nil {
-		log.Fatal(err)
+		log.Fatalf("Failed to generate random string: %v", err)
 	}
 	for i, b := range bytes {
 		bytes[i] = charset[b%byte(len(charset))]
@@ -92,12 +92,14 @@ func UploadFileToS3(file *multipart.FileHeader) (string, error) {
 func UploadFile(c *gin.Context) {
 	file, err := c.FormFile("file")
 	if err != nil {
+		log.Printf("Error getting file from form: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	fileName, err := UploadFileToS3(file)
 	if err != nil {
+		log.Printf("Error uploading file to S3: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -186,6 +188,6 @@ func DownloadFile(c *gin.Context) {
 	id := c.Param("id")
 	if err := DownloadFileFromS3(c, id); err != nil {
 		log.Printf("Error downloading file: %v", err)
-		c.String(http.StatusNotFound, "Attachment not found")
+		c.JSON(http.StatusNotFound, gin.H{"error": "Attachment not found"})
 	}
 }

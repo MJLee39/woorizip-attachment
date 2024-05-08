@@ -23,9 +23,6 @@ func main() {
 	// 라우터 초기화
 	r := router.InitRouter()
 
-	// template 파일 로드
-	r.LoadHTMLGlob("tmpl/*.html")
-
 	// 인증서 파일 경로 설정
 
 	// 서버 시작
