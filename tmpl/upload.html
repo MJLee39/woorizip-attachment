@@ -1,45 +1,46 @@
 {{define "upload.tmpl"}}
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Upload</title>
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.5.0/dist/full.min.css" rel="stylesheet" type="text/css" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/htmx.org@1.9.10/dist/htmx.min.js"></script>
-</head>
-<body class="flex items-center justify-center min-h-screen bg-gray-100">
-<div class="max-w-md w-full p-6 bg-white rounded-md shadow-md">
-    <h2 class="text-2xl font-semibold text-gray-800 mb-6">File Upload</h2>
-    <!-- 업로드 폼 -->
-    <form id="uploadForm" enctype="multipart/form-data" hx-target="#uploadResults" hx-trigger="submit">
-        <div class="mb-4">
-            <input type="file" name="file" class="file-input w-full max-w-xs" />
-        </div>
-        <button type="submit" class="bg-gray-900 text-white px-4 py-2 rounded-md hover:bg-gray-600 w-full">Upload</button>
-    </form>
-    <!-- 결과를 받아올 div -->
-    <div id="uploadResults" class="mt-4 p-4 bg-gray-200 rounded-md">
-        <!-- 서버에서 반환한 메시지가 여기에 동적으로 삽입됩니다. -->
-    </div>
-    <script>
-        document.getElementById('uploadForm').addEventListener('submit', async function(event) {
-            event.preventDefault();
-            const formData = new FormData(this);
-            try {
-                const response = await fetch('http://woorizip.teamwaf.app/attachment', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.text();
-                document.getElementById('uploadResults').innerHTML = data;
-            } catch (error) {
-                console.error('Error:', error);
-            }
+  <title>File Upload Test</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    $(document).ready(function() {
+      $('#uploadForm').submit(function(e) {
+        e.preventDefault();
+
+        var formData = new FormData();
+        var fileInput = $('#fileInput')[0];
+        var file = fileInput.files[0];
+
+        formData.append('file', file);
+
+        $.ajax({
+          url: 'https://api.teamwaf.app/attachment',
+          type: 'POST',
+          data: formData,
+          processData: false,
+          contentType: false,
+          success: function(response) {
+            console.log(response);
+            $('#resultMessage').text('File uploaded successfully. URL: ' + response.url);
+          },
+          error: function(xhr, status, error) {
+            console.error(error);
+            $('#resultMessage').text('File upload failed. Error: ' + error);
+          }
         });
-    </script>
-</div>
+      });
+    });
+  </script>
+</head>
+<body>
+  <h1>File Upload Test</h1>
+  <form id="uploadForm">
+    <input type="file" id="fileInput" name="file">
+    <button type="submit">Upload</button>
+  </form>
+  <p id="resultMessage"></p>
 </body>
 </html>
 {{end}}
