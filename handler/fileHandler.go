@@ -90,49 +90,60 @@ func UploadFileToS3(file *multipart.FileHeader) (string, error) {
 
 // UploadFile 함수는 파일을 업로드합니다.
 func UploadFile(c *gin.Context) {
-	file, err := c.FormFile("file")
+	form, err := c.MultipartForm()
 	if err != nil {
-		log.Printf("Error getting file from form: %v", err)
+		log.Printf("Error getting multipart form: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	fileName, err := UploadFileToS3(file)
-	if err != nil {
-		log.Printf("Error uploading file to S3: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+	files := form.File["files"]
+	var uploadedFiles []gin.H
+
+	for _, file := range files {
+		fileName, err := UploadFileToS3(file)
+		if err != nil {
+			log.Printf("Error uploading file to S3: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		// DB에 파일 정보 저장
+		dbInterface, exists := c.Get("db")
+		if !exists {
+			log.Println("Database connection not found in context")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database connection not found"})
+			return
+		}
+
+		db, ok := dbInterface.(*gorm.DB)
+		if !ok {
+			log.Println("Database connection found in context is not of type *gorm.DB")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database connection error"})
+			return
+		}
+
+		attachmentID := uuid.New().String()
+		attachment := models.Attachment{
+			ID:        attachmentID,
+			OwnerID:   uuid.New().String(),
+			Path:      fileName, // S3에 업로드된 파일의 키
+			Extension: filepath.Ext(fileName),
+		}
+
+		if err := db.Create(&attachment).Error; err != nil {
+			log.Printf("Error saving attachment info to database: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save attachment info. Server error."})
+			return
+		}
+
+		uploadedFiles = append(uploadedFiles, gin.H{
+			"id":   attachmentID,
+			"path": fileName,
+		})
 	}
 
-	// DB에 파일 정보 저장
-	dbInterface, exists := c.Get("db")
-	if !exists {
-		log.Println("Database connection not found in context")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database connection not found"})
-		return
-	}
-
-	db, ok := dbInterface.(*gorm.DB)
-	if !ok {
-		log.Println("Database connection found in context is not of type *gorm.DB")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database connection error"})
-		return
-	}
-
-	attachment := models.Attachment{
-		ID:        uuid.New().String(),
-		OwnerID:   uuid.New().String(),
-		Path:      fileName, // S3에 업로드된 파일의 키
-		Extension: filepath.Ext(fileName),
-	}
-
-	if err := db.Create(&attachment).Error; err != nil {
-		log.Printf("Error saving attachment info to database: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save attachment info. Server error."})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "File uploaded successfully", "url": "https://test.teamwaf.app/attachment/" + attachment.ID})
+	c.JSON(http.StatusOK, gin.H{"message": "Files uploaded successfully", "files": uploadedFiles})
 }
 
 // DownloadFileFromS3 S3로부터 파일을 다운로드합니다.
